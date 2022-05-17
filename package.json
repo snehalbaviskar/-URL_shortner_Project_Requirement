@@ -10,10 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.1",
-    "mongoose": "^6.3.2",
+    "mongoose": "^6.3.3",
     "mongoose-type-url": "^2.1.0",
     "nodemon": "^2.0.16",
+    "shortid": "^2.2.16",
     "v": "^0.3.0",
+    "valid-url": "^1.0.9",
     "validator": "^13.7.0"
   }
 }
