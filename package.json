@@ -1,0 +1,19 @@
+{
+  "name": "uranium-project-2-group-63",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.1",
+    "mongoose": "^6.3.2",
+    "mongoose-type-url": "^2.1.0",
+    "nodemon": "^2.0.16",
+    "v": "^0.3.0",
+    "validator": "^13.7.0"
+  }
+}
