@@ -51,7 +51,7 @@ const createUrl = async function (req, res) {
         const longUrl = data.longUrl
         if (!longUrl) return res.status(400).send({ status: false, message: "longUrl must be present" })
 
-        if(!isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
+        // if(!isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
 
         //Ensuring the same response is returned for an original url everytime
 
