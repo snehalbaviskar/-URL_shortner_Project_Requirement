@@ -31,11 +31,11 @@ const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
 
 
-const isValidUrl = function(value) {
-    let regexForUrl =
-        /(:?^((https|http|HTTP|HTTPS){1}:\/\/)(([w]{3})[\.]{1})?([a-zA-Z0-9]{1,}[\.])[\w]((\/){1}([\w@?^=%&amp;~+#-_.]+)))$/;
-    return regexForUrl.test(value);
-};
+// const isValidUrl = function(value) {
+//     let regexForUrl =
+//         /(:?^((https|http|HTTP|HTTPS){1}:\/\/)(([w]{3})[\.]{1})?([a-zA-Z0-9]{1,}[\.])[\w]((\/){1}([\w@?^=%&amp;~+#-_.]+)))$/;
+//     return regexForUrl.test(value);
+// };
 
 
 const createUrl = async function (req, res) {
@@ -45,7 +45,7 @@ const createUrl = async function (req, res) {
         const data = req.body
 
         // The API base Url endpoint
-        const baseUrl = 'http:localhost:3000'
+        const baseUrl = 'http://localhost:3000'
 
 
         //check if longUrl not present in requestBody
@@ -57,8 +57,8 @@ const createUrl = async function (req, res) {
 
 
         //Ensuring the same response is returned for an original url everytime
-        let cahcedLongUrl = await GET_ASYNC(`${longUrl}`)
-        if (cahcedLongUrl) { return res.send(cahcedLongUrl) }
+        let cachedLongUrl = await GET_ASYNC(`${longUrl}`)
+        if (cachedLongUrl) { return res.send(cachedLongUrl) }
         else {
             let url = await urlModel.findOne({ longUrl: longUrl }).select({urlCode:1, shortUrl:1, longUrl:1, _id:0})
             if (url) {
@@ -74,8 +74,8 @@ const createUrl = async function (req, res) {
         const shortUrl = baseUrl + '/' + urlCode
 
         //create key-value pair in object data
-        data.shortUrl = shortUrl
-        data.urlCode = urlCode
+        data.shortUrl = shortUrl.toLowerCase()
+        data.urlCode = urlCode.toLowerCase()
 
         const urlCreated = await urlModel.create(data)
         return res.status(201).send({ status: true, message: "url generated", data: { urlCode: urlCreated.urlCode, shortUrl: urlCreated.shortUrl, longUrl: urlCreated.longUrl } })
@@ -99,22 +99,26 @@ const getUrl = async function (req, res) {
 
 
         //Ensuring the same response is returned for an original url code everytime
-        let cahcedurlCode = await GET_ASYNC(`${urlCode}`)
-        if (cahcedurlCode) { return res.send(cahcedurlCode) }
+        let cachedurlCode = await GET_ASYNC(`${urlCode}`)
+        console.log(cachedurlCode);
+        if (cachedurlCode) { return res.redirect( JSON.parse(cachedurlCode)) }
         else {
             let code = await urlModel.findOne({ urlCode: urlCode }).select({ longUrl:1})
+            console.log(code);
             if (code) {
-                await SET_ASYNC(`${urlCode}`, JSON.stringify(code))
-                return res.send({ data: code });
+                 await SET_ASYNC(`${urlCode}`, JSON.stringify(code))
+                 return res.redirect( code.longUrl );
+            
             }
         }
 
 
         const findUrlCode = await urlModel.findOne({ urlCode: urlCode })
+        console.log(findUrlCode);
         //check if the urlCode is present in path params does not matches with one in db
         if (!findUrlCode) return res.status(404).send({ status: false, message: "Unable to find URL to redirect to" })
-
-        return res.status(302).send({ status: true, message: "url redirected", data: findUrlCode.longUrl })
+        await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrlCode))
+        return res.status(302).redirect( findUrlCode.longUrl )
     }
 
     catch (err) {
