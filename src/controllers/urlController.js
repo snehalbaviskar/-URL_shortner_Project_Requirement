@@ -31,11 +31,11 @@ const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
 
 
-// const isValidUrl = function(value) {
-//     let regexForUrl =
-//         /(:?^((https|http|HTTP|HTTPS){1}:\/\/)(([w]{3})[\.]{1})?([a-zA-Z0-9]{1,}[\.])[\w]((\/){1}([\w@?^=%&amp;~+#-_.]+)))$/;
-//     return regexForUrl.test(value);
-// };
+function isUrlValid(userInput) {
+    var regexQuery = "^(https?://)?(www\\.)?([-a-z0-9]{1,63}\\.)*?[a-z0-9][-a-z0-9]{0,61}[a-z0-9]\\.[a-z]{2,6}(/[-\\w@\\+\\.~#\\?&/=%]*)?$";
+    var url = new RegExp(regexQuery,"i");
+    return url.test(userInput);
+}
 
 
 const createUrl = async function (req, res) {
@@ -52,7 +52,7 @@ const createUrl = async function (req, res) {
         const longUrl = data.longUrl
         if (!longUrl) return res.status(400).send({ status: false, message: "longUrl must be present" })
 
-       // if(isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
+        if(! isUrlValid(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
 
 
 
@@ -100,24 +100,21 @@ const getUrl = async function (req, res) {
 
         //Ensuring the same response is returned for an original url code everytime
         let cachedurlCode = await GET_ASYNC(`${urlCode}`)
-        console.log(cachedurlCode);
-        if (cachedurlCode) { return res.redirect( JSON.parse(cachedurlCode)) }
+        if (cachedurlCode) {
+            return res.redirect( JSON.parse(cachedurlCode).longUrl) } ///JSON.parse convert string into object
         else {
-            let code = await urlModel.findOne({ urlCode: urlCode }).select({ longUrl:1})
-            console.log(code);
+            let code = await urlModel.findOne({ urlCode: urlCode })
             if (code) {
                  await SET_ASYNC(`${urlCode}`, JSON.stringify(code))
                  return res.redirect( code.longUrl );
-            
             }
         }
 
 
         const findUrlCode = await urlModel.findOne({ urlCode: urlCode })
-        console.log(findUrlCode);
+    
         //check if the urlCode is present in path params does not matches with one in db
         if (!findUrlCode) return res.status(404).send({ status: false, message: "Unable to find URL to redirect to" })
-        await SET_ASYNC(`${urlCode}`, JSON.stringify(findUrlCode))
         return res.status(302).redirect( findUrlCode.longUrl )
     }
 
