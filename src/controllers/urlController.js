@@ -47,20 +47,16 @@ const createUrl = async function (req, res) {
         // The API base Url endpoint
         const baseUrl = 'http:localhost:3000'
 
+
         //check if longUrl not present in requestBody
         const longUrl = data.longUrl
         if (!longUrl) return res.status(400).send({ status: false, message: "longUrl must be present" })
 
-        if(!isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
+       // if(isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
+
+
 
         //Ensuring the same response is returned for an original url everytime
-
-        // const findLongUrl = await urlModel.findOne({ longUrl: longUrl })
-        // if (findLongUrl) {
-        //     return res.status(200).send({ status: true, message: "url already exist", data: { urlCode: findLongUrl.urlCode, shortUrl: findLongUrl.shortUrl, longUrl: findLongUrl.longUrl } })
-        // }
-
-        //const fetchLongUrl = async function (req, res) {
         let cahcedLongUrl = await GET_ASYNC(`${longUrl}`)
         if (cahcedLongUrl) { return res.send(cahcedLongUrl) }
         else {
@@ -100,6 +96,19 @@ const getUrl = async function (req, res) {
         const urlCode = req.params.urlCode
         //check if no urlCode is present in path params
         if (!urlCode) return res.status(400).send({ status: false, message: "urlCode must be present" })
+
+
+        //Ensuring the same response is returned for an original url code everytime
+        let cahcedurlCode = await GET_ASYNC(`${urlCode}`)
+        if (cahcedurlCode) { return res.send(cahcedurlCode) }
+        else {
+            let code = await urlModel.findOne({ urlCode: urlCode }).select({ longUrl:1})
+            if (code) {
+                await SET_ASYNC(`${urlCode}`, JSON.stringify(code))
+                return res.send({ data: code });
+            }
+        }
+
 
         const findUrlCode = await urlModel.findOne({ urlCode: urlCode })
         //check if the urlCode is present in path params does not matches with one in db
