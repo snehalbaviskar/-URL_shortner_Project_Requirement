@@ -45,7 +45,7 @@ const createUrl = async function (req, res) {
         const data = req.body
 
         // The API base Url endpoint
-        const baseUrl = 'http:localhost:3000'
+        const baseUrl = 'http://localhost:3000'
 
 
         //check if longUrl not present in requestBody
