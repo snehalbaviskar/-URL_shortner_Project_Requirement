@@ -4,7 +4,6 @@ const shortid = require('shortid')
 
 const urlModel = require('../models/urlModel')
 
-
 const redis = require("redis");
 
 const { promisify } = require("util");
@@ -26,15 +25,14 @@ redisClient.on("connect", async function () {
 
 
 
-const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
+const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);   //   command se function ready kr rhe
 const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
 
-
-function isUrlValid(userInput) {
-    var regexQuery = "^(https?://)?(www\\.)?([-a-z0-9]{1,63}\\.)*?[a-z0-9][-a-z0-9]{0,61}[a-z0-9]\\.[a-z]{2,6}(/[-\\w@\\+\\.~#\\?&/=%]*)?$";
-    var url = new RegExp(regexQuery,"i");
-    return url.test(userInput);
+const isValidRequestBody = function (value) {
+    if (typeof (value) == 'undefined' || value == null) return false
+    if (typeof (value) == 'string' && value.trim().length == 0) return false
+    return true
 }
 
 
@@ -44,21 +42,31 @@ const createUrl = async function (req, res) {
 
         const data = req.body
 
-        // The API base Url endpoint
-        const baseUrl = 'http://localhost:3000'
+         // The API base Url endpoint
+         const baseUrl = 'http://localhost:3000'
 
+        if(Object.keys(data).length != 1){
+            return res.status(400).send({status : false, message :"Invalid request body"})
+        }
+
+        //if no input inside long url
+        if(! isValidRequestBody) return res.status(400).send({status : false, message :"No input inside long url"})
 
         //check if longUrl not present in requestBody
         const longUrl = data.longUrl
         if (!longUrl) return res.status(400).send({ status: false, message: "longUrl must be present" })
 
-        if(! isUrlValid(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
-
+        //check valid url
+        let validLongUrl = (/https?:\/\/(www\.)?[-a-zA-Z0-9@:%.\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%\+.~#?&//=]*)/.test(longUrl.trim()))
+        if (!validLongUrl) {
+            return res.status(400).send({ status: false, msg: "Please provide a valid longUrl" })
+        }
 
 
         //Ensuring the same response is returned for an original url everytime
         let cachedLongUrl = await GET_ASYNC(`${longUrl}`)
-        if (cachedLongUrl) { return res.send(cachedLongUrl) }
+        console.log(cachedLongUrl);
+        if (cachedLongUrl) { return res.send(JSON.parse(cachedLongUrl)) }
         else {
             let url = await urlModel.findOne({ longUrl: longUrl }).select({urlCode:1, shortUrl:1, longUrl:1, _id:0})
             if (url) {
@@ -81,8 +89,8 @@ const createUrl = async function (req, res) {
         return res.status(201).send({ status: true, message: "url generated", data: { urlCode: urlCreated.urlCode, shortUrl: urlCreated.shortUrl, longUrl: urlCreated.longUrl } })
     }
 
-    catch (err) {
-        return res.status(500).send({ status: false, error: err.message })
+    catch (error) {
+        return res.status(500).send({ status: false, error: error.message })
     }
 
 }
@@ -118,8 +126,8 @@ const getUrl = async function (req, res) {
         return res.status(302).redirect( findUrlCode.longUrl )
     }
 
-    catch (err) {
-        return res.status(500).send({ status: false, error: err.message })
+    catch (error) {
+        return res.status(500).send({ status: false, error: error.message })
     }
 }
 
