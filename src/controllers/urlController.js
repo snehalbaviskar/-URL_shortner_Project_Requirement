@@ -1,5 +1,5 @@
 const express = require('express')
-const validUrl = require('valid-url')
+// const validUrl = require('valid-url')
 const shortid = require('shortid')
 
 const urlModel = require('../models/urlModel')
@@ -24,17 +24,16 @@ redisClient.on("connect", async function () {
     console.log("Connected to Redis..");
 });
 
-
-
 const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
 const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
 
-
-
 function isUrlValid(userInput) {
-    var regexQuery = "^(https?://)?(www\\.)?([-a-z0-9]{1,63}\\.)*?[a-z0-9][-a-z0-9]{0,61}[a-z0-9]\\.[a-z]{2,6}(/[-\\w@\\+\\.~#\\?&/=%]*)?$";
-    var url = new RegExp(regexQuery,"i");
-    return url.test(userInput);
+    //var regexQuery = "^(https?://)?(www\\.)?([-a-z0-9]{1,63}\\.)*?[a-z0-9][-a-z0-9]{0,61}[a-z0-9]\\.[a-z]{2,6}(/[-\\w@\\+\\.~#\\?&/=%]*)?$";
+    // var url = new RegExp(regexQuery,"i");
+    var regexQuery=  /^(http(s)?:\/\/)?(www.)?([a-zA-Z0-9])+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/[^\s]*)?$/
+
+    return regexQuery.test(userInput.trim());
+    
 }
 
 
@@ -52,19 +51,13 @@ const createUrl = async function (req, res) {
         const longUrl = data.longUrl
         if (!longUrl) return res.status(400).send({ status: false, message: "longUrl must be present" })
 
-
-
-        // if(!isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
-
-       // if(isValidUrl(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
-
-        if(! isUrlValid(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
+         if(! isUrlValid(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
 
 
 
 
 
-        //Ensuring the same response is returned for an original url everytime
+    //Ensuring the same response is returned for an original url everytime
         let cachedLongUrl = await GET_ASYNC(`${longUrl}`)
         if (cachedLongUrl) { return res.send(cachedLongUrl) }
         else {
