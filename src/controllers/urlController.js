@@ -23,18 +23,6 @@ redisClient.on("connect", async function () {
     console.log("Connected to Redis..");
 });
 
-<<<<<<< HEAD
-const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
-const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
-
-function isUrlValid(userInput) {
-    //var regexQuery = "^(https?://)?(www\\.)?([-a-z0-9]{1,63}\\.)*?[a-z0-9][-a-z0-9]{0,61}[a-z0-9]\\.[a-z]{2,6}(/[-\\w@\\+\\.~#\\?&/=%]*)?$";
-    // var url = new RegExp(regexQuery,"i");
-    var regexQuery=  /^(http(s)?:\/\/)?(www.)?([a-zA-Z0-9])+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/[^\s]*)?$/
-
-    return regexQuery.test(userInput.trim());
-    
-=======
 
 
 const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);   //   command se function ready kr rhe
@@ -45,7 +33,6 @@ const isValidRequestBody = function (value) {
     if (typeof (value) == 'undefined' || value == null) return false
     if (typeof (value) == 'string' && value.trim().length == 0) return false
     return true
->>>>>>> bbd47b774436c8ac4b8374d4692912ce0caae624
 }
 
 
@@ -69,23 +56,18 @@ const createUrl = async function (req, res) {
         const longUrl = data.longUrl
         if (!longUrl) return res.status(400).send({ status: false, message: "longUrl must be present" })
 
-<<<<<<< HEAD
-         if(! isUrlValid(longUrl)) return res.status(400).send({ status: false, message: "Url not valid" })
-
-=======
         //check valid url
         let validLongUrl = (/https?:\/\/(www\.)?[-a-zA-Z0-9@:%.\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%\+.~#?&//=]*)/.test(longUrl.trim()))
         if (!validLongUrl) {
             return res.status(400).send({ status: false, msg: "Please provide a valid longUrl" })
         }
->>>>>>> bbd47b774436c8ac4b8374d4692912ce0caae624
 
 
 
 
     //Ensuring the same response is returned for an original url everytime
         let cachedLongUrl = await GET_ASYNC(`${longUrl}`)
-        console.log(cachedLongUrl);
+        //console.log(cachedLongUrl);
         if (cachedLongUrl) { return res.send(JSON.parse(cachedLongUrl)) }
         else {
             let url = await urlModel.findOne({ longUrl: longUrl }).select({urlCode:1, shortUrl:1, longUrl:1, _id:0})
